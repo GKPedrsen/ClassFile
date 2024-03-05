@@ -13,6 +13,7 @@
 #include <ClassFile/ClassFile.hpp>
 #include <ClassFile/Parser.hpp>
 #include <ClassFile/Serializer.hpp>
+#include <ClassFile/Util.hpp>
 
 static bool PrintDetails{false};
 
@@ -218,22 +219,23 @@ void PrintFields(const ClassFile::ClassFile& cf)
   for(const auto& field : cf.Fields)
   {
     std::cout << "\n  ";
-    std::cout << cf.ConstPool.LookupString(field.NameIndex).Get();
-    std::cout << "(";
 
-    //                 same struct, same flags
-    auto flagStrings = field.FlagsToStrs();
-
-    for(auto i = 0u; i < flagStrings.size(); i++)
+    //Print flags
+    for(auto flagView : field.FlagsToStrs())
     {
-      std::cout << flagStrings[i];
-
-      if(i+1 != flagStrings.size())
-        std::cout << ", ";
+      std::string flag{flagView};
+      std::transform(flag.begin(), flag.end(), flag.begin(), ::tolower);
+      std::cout << flag << ' ';
     }
 
-    std::cout << "): ";
-    std::cout << cf.ConstPool.LookupString(field.DescriptorIndex).Get();
+    //Print FieldType
+    auto desc = cf.ConstPool.LookupString(field.DescriptorIndex).Get();
+    auto fieldType = ClassFile::FieldDescriptorToTypeStr(desc).Get();
+
+    std::cout << fieldType << ' ';
+
+    //Print Name
+    std::cout << cf.ConstPool.LookupString(field.NameIndex).Get() << ';';
   }
 
   std::cout << "\n";
